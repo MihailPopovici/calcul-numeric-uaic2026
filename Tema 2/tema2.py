@@ -2,10 +2,7 @@
 Tema nr. 2 - Descompunerea Cholesky (LDLT)
 ==========================================
 
-Rezolvarea sistemului Ax = b folosind descompunerea LDLT,
-unde A este matrice simetrica si pozitiv definita.
-
-Structura programului:
+Structura:
 1. Generare matrice A = B * B^T (simetrica, pozitiv definita)
 2. Rezolvare cu biblioteca (LU) -> xlib
 3. Calcul descompunere LDLT (Cholesky)
@@ -16,6 +13,7 @@ Structura programului:
 
 import numpy as np
 import math
+import scipy.linalg
 
 # ============================================================
 # 1. CITIRE DATE DE INTRARE
@@ -35,26 +33,79 @@ print(f"\nn = {n},  eps = 1e-{t} = {eps}")
 #    A = B * B^T
 # ============================================================
 
-np.random.seed(42)                        # reproductibilitate
+np.random.seed(42)                       
 B      = np.random.uniform(-10, 10, (n, n))
-A_init = B @ B.T                          # A simetrica si p.d.
+A_init = B @ B.T                         
 
 # Adaugam n*I pentru a ne asigura ca A este bine conditionata
-# (optional, dar recomandat pentru n mare)
 A_init += n * np.eye(n)
 
-"""
-B @ B.T e pozitiv semi-definit, adica exista riscul teoretic ca unele valori din d sa fie 0 sau extrem de mici,
-ceea ce ar strica impartirea din algoritmul Cholesky. 
-Adaugand n*I "impingem" toata matricea departe de această zona periculoasă. Matricea ramane simetrica si devine strict pozitiv definita.
-"""
 
 b = np.random.uniform(-10, 10, n)         # vector termeni liberi
 
 print(f"\nMatricea A a fost generata ca B*B^T + {n}*I (simetrica, pozitiv definita).")
 
 # ============================================================
-# 3. REZOLVARE CU BIBLIOTECA NUMPY (LU implicit prin np.linalg)
+# 3. DESCOMPUNERE LU CU BIBLIOTECA
+#
+#    scipy.linalg.lu() returneaza descompunerea PA = LU, unde:
+#      - P = matrice de permutare (interschimba randurile lui A)
+#      - L = matrice inferior triunghiulara (lower triangular)
+#      - U = matrice superior triunghiulara (upper triangular)
+#
+#    Motivul pentru P: In algoritmul Gauss, daca elementul pivot 
+#    (pe diagonala) este 0 sau foarte mic, impartirea devine 
+#    instabila numeric. Solutia este pivotarea partiala:
+#      1. Cautam un element mai mare pe coloana respectiva
+#      2. Interschimbam randurile (P memoreaza aceste interschimbari)
+#      3. Continuam eliminarea Gauss cu noul pivot
+#
+#    Proprietati ale lui P:
+#      - Contine numai 0 si 1
+#      - Fiecare rand si coloana au exact un singur 1
+#      - P^(-1) = P^T (inversa = transpusa)
+#      - Daca nu sunt interschimbari: P = I (matrice identitate)
+#
+#    Nota: Pentru matricea noastra A = B*B^T + n*I (simetrica, 
+#    pozitiv definita), P va fi aproape sigur matricea identitate
+#    (nu sunt necesare interschimbari), dar scipy.linalg.lu() 
+#    returneaza P pentru generalitate, functionand pentru orice 
+#    matrice, nu doar pentru cele pozitiv definite.
+# ============================================================
+ 
+print("\n" + "=" * 60)
+print("--- Descompunere LU cu biblioteca scipy ---")
+print("=" * 60)
+ 
+P, L_lib, U_lib = scipy.linalg.lu(A_init)
+ 
+print(f"\nMatricea de permutare P (shape {P.shape}):")
+if n <= 10:
+    print(P)
+else:
+    print(f"(Matricea este prea mare, se afiseaza doar coltul stanga-sus 5x5)")
+    print(P[:5, :5])
+ 
+print(f"\nMatricea L inferior triunghiulara (shape {L_lib.shape}):")
+if n <= 10:
+    print(L_lib)
+else:
+    print(f"(Se afiseaza doar coltul stanga-sus 5x5)")
+    print(L_lib[:5, :5])
+ 
+print(f"\nMatricea U superior triunghiulara (shape {U_lib.shape}):")
+if n <= 10:
+    print(U_lib)
+else:
+    print(f"(Se afiseaza doar coltul stanga-sus 5x5)")
+    print(U_lib[:5, :5])
+ 
+# Verificare: P @ L @ U ar trebui sa fie egal cu A_init
+reconstruction_error = np.linalg.norm(P @ L_lib @ U_lib - A_init, ord='fro')
+print(f"\nVerificare: ||P*L*U - A||_F = {reconstruction_error:.2e}")
+
+# ============================================================
+# 4. REZOLVARE CU BIBLIOTECA NUMPY
 # ============================================================
 
 print("\n--- Rezolvare cu biblioteca numpy (np.linalg.solve) ---")
@@ -63,7 +114,7 @@ k = min(5, n)
 print(f"xlib (primele {k} valori): {xlib[:5]}")
 
 # ============================================================
-# 4. DESCOMPUNEREA LDLT (CHOLESKY)
+# 5. DESCOMPUNEREA LDLT (CHOLESKY)
 #    Lucram pe o copie a lui A_init.
 #    Elementele lui L (sub-diagonala) se scriu direct in A.
 #    Diagonala lui D se memoreaza in vectorul d.
@@ -74,21 +125,18 @@ print(f"xlib (primele {k} valori): {xlib[:5]}")
 
 print("\n--- Calcul descompunere LDLT ---")
 
-A = A_init.copy()          # matricea de lucru (va fi modificata)
-d = np.zeros(n)            # vectorul diagonalei lui D
+A = A_init.copy()         
+d = np.zeros(n)           
 
 success = True
 
-for p in range(n):         # p = 0, 1, ..., n-1  (indexare 0-based)
+for p in range(n):      
 
     # --- Calculul elementului diagonal dp ---
-    # dp = a[p][p] - sum_{k=0}^{p-1} d[k] * l[p][k]^2
-    # l[p][k] se afla in A[p][k] pentru k < p (deja calculat)
     s = A[p, p]
     for k in range(p):
         s -= d[k] * A[p, k] ** 2
 
-    # Test daca dp este suficient de diferit de 0
     if math.fabs(s) <= eps:
         print(f"EROARE: d[{p}] = {s} <= eps. Matricea nu este pozitiv definita!")
         success = False
@@ -97,16 +145,10 @@ for p in range(n):         # p = 0, 1, ..., n-1  (indexare 0-based)
     d[p] = s
 
     # --- Calculul elementelor coloanei p din L: l[i][p], i = p+1, ..., n-1 ---
-    # l[i][p] = (a[i][p] - sum_{k=0}^{p-1} d[k]*l[i][k]*l[p][k]) / dp
     for i in range(p + 1, n):
-        t_val = A[i, p]                   # a[i][p] original (sus-diag: A[p][i] = A_init[p][i])
-        # Atentie: A[i][p] pt i>p se va suprascrie -> folosim A[p][i] pt elementul original
-        # De fapt: pentru i > p, A[i][p] inca nu a fost suprascris la pasul curent
-        # dar ca sa fim siguri, citim elementul original din partea superior-triunghiulara
         t_val = A[p, i]                   # A este simetrica initial, A[p][i] = A_init[p][i]
         for k in range(p):
             t_val -= d[k] * A[i, k] * A[p, k]
-        # A[p][k] pentru k<p = l[p][k], deja calculat si stocat in A
 
         if math.fabs(d[p]) > eps:
             A[i, p] = t_val / d[p]
@@ -124,7 +166,7 @@ if success:
     print(f"d (primele {k} valori): {d[:5]}")
 
 # ============================================================
-# 5. CALCULUL DETERMINANTULUI
+# 6. CALCULUL DETERMINANTULUI
 #    det(A) = det(L) * det(D) * det(L^T)
 #    det(L) = 1  (L inferior triunghiulara cu 1 pe diagonala)
 #    det(L^T) = 1
@@ -142,7 +184,7 @@ print(f"det(A) numpy        : {det_A_lib:.6e}")
 print(f"Eroare relativa     : {abs(det_A_chol - det_A_lib) / (abs(det_A_lib) + 1e-300):.2e}")
 
 # ============================================================
-# 6. REZOLVAREA SISTEMULUI Ax = b FOLOSIND LDLT
+# 7. REZOLVAREA SISTEMULUI Ax = b FOLOSIND LDLT
 #
 #    Ax = b  <=>  L D L^T x = b
 #    Se rezolva in 3 pasi:
@@ -160,18 +202,14 @@ print("\n--- Rezolvare sistem Ax = b cu LDLT ---")
 if success:
 
     # --- (a) Substitutie directa: Lz = b ---
-    # L inferior triunghiulara cu l[i][i] = 1
-    # z[i] = b[i] - sum_{j=0}^{i-1} l[i][j] * z[j]
-    # l[i][j] se afla in A[i][j] pentru j < i
     z = np.zeros(n)
     for i in range(n):
         s = b[i]
         for j in range(i):
-            s -= A[i, j] * z[j]      # A[i][j] = l[i][j] pentru j < i
-        z[i] = s                     # diagonala 1, deci nu impartim
+            s -= A[i, j] * z[j]      
+        z[i] = s                     
 
     # --- (b) Sistem diagonal: Dy = z ---
-    # y[i] = z[i] / d[i]
     y = np.zeros(n)
     for i in range(n):
         if math.fabs(d[i]) > eps:
@@ -182,32 +220,15 @@ if success:
             break
 
     # --- (c) Substitutie inversa: L^T x = y ---
-    # L^T superior triunghiulara cu l^T[i][i] = 1
-    # x[i] = y[i] - sum_{j=i+1}^{n-1} l^T[i][j] * x[j]
-    #       = y[i] - sum_{j=i+1}^{n-1} l[j][i] * x[j]
-    # l[j][i] se afla in A[j][i] pentru j > i
     xChol = np.zeros(n)
     for i in range(n - 1, -1, -1):
         s = y[i]
         for j in range(i + 1, n):
-            s -= A[j, i] * xChol[j]  # A[j][i] = l[j][i] pentru j > i
-        xChol[i] = s                 # diagonala 1, deci nu impartim
+            s -= A[j, i] * xChol[j]  
+        xChol[i] = s                 
     k = min(5, n)
     print(f"xChol (primele {k} valori): {xChol[:5]}")
 
-# ============================================================
-# 7. VERIFICARE - CALCULUL NORMELOR
-#    ||A_init * xChol - b||_2  (ar trebui < 1e-8)
-#    ||xChol - xlib||_2        (ar trebui < 1e-9)
-#
-#    IMPORTANT: A_init * xChol trebuie calculat manual,
-#    deoarece matricea A a fost modificata de Cholesky.
-#    Se foloseste simetria: a[i][j] = a[j][i] pentru i > j.
-#    In matricea A modificata:
-#      - A[i][j] cu i > j contine l[i][j] (NU a_init[i][j])
-#      - A[i][j] cu i <= j contine a_init[i][j]
-#    Deci pentru i > j folosim A[j][i] (elementul din partea superioara).
-# ============================================================
 
 print("\n--- Verificare solutie ---")
 
