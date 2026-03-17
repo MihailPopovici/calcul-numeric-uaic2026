@@ -54,13 +54,65 @@ assert np.allclose(b_init, A_init @ s), "Eroare la calculul lui b!"
 print("\nVectorul b = A*s calculat cu succes.")
 
 # ============================================================
-# 2. REZOLVARE CU BIBLIOTECA NUMPY
-#    numpy.linalg.solve foloseste intern descompunere LU/QR
-#    Obtinem xQR ca referinta
+# 2. REZOLVARE CU BIBLIOTECA NUMPY - Descompunere QR explicita
+#    numpy.linalg.qr returneaza explicit Q si R
+#    astfel incat A = Q * R
+#    Rezolvam Ax = b <=> Q*R*x = b <=> R*x = Q^T * b
 # ============================================================
 
-print("\n--- Rezolvare cu biblioteca numpy ---")
-xQR = np.linalg.solve(A_init, b_init)
+print("\n--- Rezolvare cu biblioteca numpy (QR explicit) ---")
+
+def substitutie_inversa(R, rhs, n, eps):
+    """
+    Rezolva sistemul superior triunghiular R*x = rhs.
+    Returneaza vectorul solutie x sau None daca R e singulara.
+    """
+    x = np.zeros(n)
+    for i in range(n - 1, -1, -1):
+        if math.fabs(R[i, i]) <= eps:
+            print(f"EROARE substitutie inversa: R[{i}][{i}] ~ 0!")
+            return None
+        s_val = rhs[i]
+        for j in range(i + 1, n):
+            s_val -= R[i, j] * x[j]
+        x[i] = s_val / R[i, i]
+    return x
+
+def rezolvare_QR_numpy(A, b):
+    """
+    Rezolva sistemul Ax = b prin descompunere QR explicita.
+    
+    Pasi:
+      1. A = Q * R  (Q ortogonala, R superior triunghiulara)
+      2. Q*R*x = b  =>  R*x = Q^T * b   (deoarece Q^T * Q = I)
+      3. Rezolvam R*x = Q^T * b prin substitutie inversa
+    """
+    n = len(b)
+
+    # Pasul 1: Descompunere QR explicita
+    # Q: matrice ortogonala (n x n), R: matrice superior triunghiulara (n x n)
+    Q, R = np.linalg.qr(A)
+
+    print(f"Q shape: {Q.shape}, R shape: {R.shape}")
+    print(f"R[0][0] = {R[0,0]:.6f}  (element diagonal al lui R)")
+
+    # Verificare: A ≈ Q * R
+    eroare_reconstructie = np.linalg.norm(A - Q @ R)
+    print(f"||A - Q*R||_2 = {eroare_reconstructie:.2e}  (verificare: A = Q*R)")
+
+    # Verificare: Q este ortogonala (Q^T * Q = I)
+    eroare_ortogonalitate = np.linalg.norm(Q.T @ Q - np.eye(n))
+    print(f"||Q^T*Q - I||_2 = {eroare_ortogonalitate:.2e}  (verificare: Q ortogonala)")
+
+    # Pasul 2: Calculam termenul drept transformat: c = Q^T * b
+    c = Q.T @ b
+
+    # Pasul 3: Rezolvam R*x = c prin substitutie inversa
+    x = substitutie_inversa(R, c, n, eps)
+
+    return x, Q, R
+
+xQR, Q_lib, R_lib = rezolvare_QR_numpy(A_init, b_init)
 k_display = min(5, n)
 print(f"xQR (primele {k_display} valori): {xQR[:k_display]}")
 
