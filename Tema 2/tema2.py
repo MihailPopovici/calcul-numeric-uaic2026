@@ -105,13 +105,48 @@ reconstruction_error = np.linalg.norm(P @ L_lib @ U_lib - A_init, ord='fro')
 print(f"\nVerificare: ||P*L*U - A||_F = {reconstruction_error:.2e}")
 
 # ============================================================
-# 4. REZOLVARE CU BIBLIOTECA NUMPY
+# 4. REZOLVARE FOLOSIND L_lib, U_lib, P DE LA SCIPY
+#
+#    Pa A = L*U, deci PA*x = L*U*x = b
+#    Se rezolva in 2 pasi:
+#      (a) Ly = P*b   (substitutie directa)
+#      (b) Ux = y     (substitutie inversa)
 # ============================================================
 
-print("\n--- Rezolvare cu biblioteca numpy (np.linalg.solve) ---")
-xlib = np.linalg.solve(A_init, b)
+print("\n--- Rezolvare cu L_lib, U_lib de la scipy (substitutie directa/inversa) ---")
+
+# Pasul 1: Permutam b folosind P
+b_permuted = P @ b
+
+# Pasul 2: Substitutie directa: Ly = P*b
+# L este inferior triunghiulara cu 1-uri pe diagonala
+y_from_LU = np.zeros(n)
+for i in range(n):
+    s = b_permuted[i]
+    for j in range(i):
+        s -= L_lib[i, j] * y_from_LU[j]
+    y_from_LU[i] = s
+
+# Pasul 3: Substitutie inversa: Ux = y
+# U este superior triunghiulara
+xlib = np.zeros(n)
+for i in range(n - 1, -1, -1):
+    s = y_from_LU[i]
+    for j in range(i + 1, n):
+        s -= U_lib[i, j] * xlib[j]
+    
+    if math.fabs(U_lib[i, i]) > eps:
+        xlib[i] = s / U_lib[i, i]
+    else:
+        print(f"EROARE: U[{i},{i}] = 0 - matrice singulara!")
+        xlib[i] = 0.0
+
 k = min(5, n)
 print(f"xlib (primele {k} valori): {xlib[:5]}")
+
+# Verificare: P @ L_lib @ U_lib @ x ar trebui sa fie egal cu P @ b (adica b_permuted)
+check_LU = P @ L_lib @ U_lib @ xlib
+print(f"\nVerificare: ||P*L*U*xlib - b|| = {np.linalg.norm(check_LU - b):.2e}")
 
 # ============================================================
 # 5. DESCOMPUNEREA LDLT (CHOLESKY)
