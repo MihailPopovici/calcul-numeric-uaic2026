@@ -31,25 +31,18 @@ print(f"\nn = {n},  eps = 1e-{t} = {eps}")
 #    - A = matrice patratica aleatoare n x n
 #    - s = vectorul solutie exacta (il stim dinainte!)
 #    - b = A * s  (calculat ca suma: b[i] = sum_j s[j]*a[i][j])
-#
-#    Trucul: daca construim b = A*s, atunci solutia exacta
-#    a sistemului Ax = b este chiar s. Asta ne permite sa
-#    verificam cat de precisa e solutia noastra la final.
 # ============================================================
 
 np.random.seed(42)
 A_init = np.random.uniform(-10, 10, (n, n))
 s      = np.random.uniform(-10, 10, n)
 
-# Calculam b[i] = sum_{j=1}^{n} s[j] * a[i][j]
-# (formula din tema, indexare 1-based in PDF, 0-based in cod)
 b_init = np.zeros(n)
 for i in range(n):
     for j in range(n):
         b_init[i] += s[j] * A_init[i, j]
 
 # Verificare: trebuie sa fie acelasi lucru ca A_init @ s
-# (folosim versiunea vectorizata doar pentru verificare interna)
 assert np.allclose(b_init, A_init @ s), "Eroare la calculul lui b!"
 print("\nVectorul b = A*s calculat cu succes.")
 
@@ -96,7 +89,7 @@ def rezolvare_QR_numpy(A, b):
     print(f"Q shape: {Q.shape}, R shape: {R.shape}")
     print(f"R[0][0] = {R[0,0]:.6f}  (element diagonal al lui R)")
 
-    # Verificare: A ≈ Q * R
+    # Verificare: A = Q * R
     eroare_reconstructie = np.linalg.norm(A - Q @ R)
     print(f"||A - Q*R||_2 = {eroare_reconstructie:.2e}  (verificare: A = Q*R)")
 
@@ -118,12 +111,6 @@ print(f"xQR (primele {k_display} valori): {xQR[:k_display]}")
 
 # ============================================================
 # 3. ALGORITMUL HOUSEHOLDER - implementare manuala
-#
-# Ideea: aplicam n-1 reflectii asupra lui A si b simultan.
-# La fiecare pas r, "curatam" coloana r (punem zerouri sub diagonala).
-# La final: A devine R (superior triunghiulara)
-#           Q_bar devine Q^T
-#           b devine Q^T * b_init
 # ============================================================
 
 print("\n--- Calcul descompunere QR cu algoritmul Householder ---")
@@ -155,7 +142,6 @@ for r in range(n - 1):
     # Daca sigma e aproape 0, coloana e deja "curata" -> sarim
     if math.fabs(sigma) <= eps:
         # Matricea e (aproape) singulara sau coloana e deja 0
-        # In practica pentru matrice aleatoare nu se intampla
         singular = True
         print(f"ATENTIE: sigma = 0 la pasul r={r}. Matrice posibil singulara!")
         break
@@ -171,10 +157,6 @@ for r in range(n - 1):
     # (beta = u^T * u / 2, folosit la normalizare)
     beta = sigma - k * A[r, r]
 
-    # Vectorul u:
-    # u[i] = 0         pentru i < r
-    # u[r] = a[r][r] - k
-    # u[i] = a[i][r]   pentru i > r
     u = np.zeros(n)
     u[r] = A[r, r] - k
     for i in range(r + 1, n):
@@ -189,10 +171,6 @@ for r in range(n - 1):
     # ----------------------------------------------------------
     # TRANSFORMAREA COLOANELOR j = r+1, ..., n-1
     # (coloana r se seteaza direct mai jos)
-    #
-    # Pentru fiecare coloana j:
-    #   gamma = (u^T * coloana_j) / beta = sum_i u[i]*a[i][j] / beta
-    #   a[i][j] = a[i][j] - gamma * u[i]  pentru i = r..n-1
     # ----------------------------------------------------------
 
     for j in range(r + 1, n):
@@ -218,9 +196,6 @@ for r in range(n - 1):
 
     # ----------------------------------------------------------
     # TRANSFORMAREA VECTORULUI b: b = P_r * b
-    #
-    # gamma = (u^T * b) / beta = sum_i u[i]*b[i] / beta
-    # b[i] = b[i] - gamma * u[i]  pentru i = r..n-1
     # ----------------------------------------------------------
 
     gamma = 0.0
@@ -268,27 +243,7 @@ if not singular:
 
 # ============================================================
 # 4. REZOLVAREA SISTEMULUI Ax = b FOLOSIND QR HOUSEHOLDER
-#
-# Rx = Q^T * b_init
-# b contine deja Q^T * b_init (transformat la pasii de mai sus)
-# Rezolvam Rx = b prin substitutie inversa
 # ============================================================
-
-def substitutie_inversa(R, rhs, n, eps):
-    """
-    Rezolva sistemul superior triunghiular R*x = rhs.
-    Returneaza vectorul solutie x sau None daca R e singulara.
-    """
-    x = np.zeros(n)
-    for i in range(n - 1, -1, -1):
-        if math.fabs(R[i, i]) <= eps:
-            print(f"EROARE substitutie inversa: R[{i}][{i}] ~ 0!")
-            return None
-        s_val = rhs[i]
-        for j in range(i + 1, n):
-            s_val -= R[i, j] * x[j]
-        x[i] = s_val / R[i, i]
-    return x
 
 if not singular:
     xHouseholder = substitutie_inversa(A, b, n, eps)

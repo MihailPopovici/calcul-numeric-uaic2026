@@ -2,6 +2,20 @@
 Tema nr. 2 - Descompunerea Cholesky (LDLT)
 ==========================================
 
+Student 1: 
+       Popovici Mihail
+       nr matricol: 310910401RSL231176
+       email: mpopovici763@gmail.com
+       discord: #mihail8071
+
+Student 2:
+        Rusu George-Razvan
+        nr matricol: 310910401RSL231194
+        email: georgerusu984@gmail.com
+        discord: #dixienormus3027
+
+Procentaj de AI folosit: 75%
+
 Structura:
 1. Generare matrice A = B * B^T (simetrica, pozitiv definita)
 2. Rezolvare cu biblioteca (LU) -> xlib
