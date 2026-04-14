@@ -382,8 +382,8 @@ def rezolva_sistem(idx, folder=".", eps=EPSILON):
         return
     
     print(f"    => CONVERGENTA atinsa dupa {k_iter} iteratii.")
-    print(f"    Primele 5 componente ale solutiei x_GS:")
-    for i in range(min(5, len(x_gs))):
+    print(f"    Primele 10 componente ale solutiei x_GS:")
+    for i in range(min(10, len(x_gs))):
         print(f"      x_GS[{i}] = {x_gs[i]:.10f}")
     
     # ----------------------------------------------------------------
@@ -391,8 +391,8 @@ def rezolva_sistem(idx, folder=".", eps=EPSILON):
     # ----------------------------------------------------------------
     print("\n[5] Calculul y = A * x_GS (parcurgere unica):")
     y = calculeaza_Ax_sparse(d0, d1, p, d2, q, x_gs)
-    print(f"    Primele 5 componente ale lui A*x_GS:")
-    for i in range(min(5, len(y))):
+    print(f"    Primele 10 componente ale lui A*x_GS:")
+    for i in range(min(10, len(y))):
         print(f"      y[{i}] = {y[i]:.10f}   (b[{i}] = {b[i]:.10f})")
     
     # ----------------------------------------------------------------
