@@ -369,9 +369,9 @@ CE INFORMATII CONTINE?
     print("--- EXEMPLU 1: Matrice 3x3 ---")
     # Cream o matrice simetrica pozitiv definita: B^T * B + I garanteaza asta
     np.random.seed(7)
-    B = np.random.randn(3, 3)
-    A1 = B.T @ B + 3 * np.eye(3)  # pozitiv definita sigur
-    A1 = (A1 + A1.T) / 2  # asiguram simetria exacta
+    B = np.random.randn(6, 6)
+    A1 = B.T @ B + 6 * np.eye(6)  # pozitiv definita sigur
+    #A1 = (A1 + A1.T) / 2  # asiguram simetria exacta
 
     print("Matricea A (simetrica, pozitiv definita):")
     print(np.round(A1, 4))

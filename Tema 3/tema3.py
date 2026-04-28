@@ -2,6 +2,21 @@
 Tema nr. 3 - Descompunerea QR folosind algoritmul Householder
 =============================================================
 
+Student 1: 
+       Popovici Mihail
+       nr matricol: 310910401RSL231176
+       email: mpopovici763@gmail.com
+       discord: #mihail8071
+
+Student 2:
+        Rusu George-Razvan
+        nr matricol: 310910401RSL231194
+        email: georgerusu984@gmail.com
+        discord: #dixienormus3027
+
+Procentaj de AI folosit: 75%
+
+
 Structura programului:
 1. Generare date: matrice A aleatoare, vector s, calcul b = A*s
 2. Descompunere QR cu biblioteca numpy -> xQR
@@ -17,9 +32,6 @@ print("=" * 60)
 print("  TEMA 3 - Descompunerea QR (Algoritmul Householder)")
 print("=" * 60)
 
-# ============================================================
-# CITIRE DATE DE INTRARE
-# ============================================================
 
 n   = int(input("\nIntroduceti dimensiunea sistemului n: "))
 t   = int(input("Introduceti precizia t (eps = 10^(-t), ex: t=8): "))
