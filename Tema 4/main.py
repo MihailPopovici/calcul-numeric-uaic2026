@@ -3,25 +3,20 @@
 TEMA 4 - Rezolvarea sistemelor liniare rare cu metoda Gauss-Seidel
 =============================================================================
 
-Structura matricei rare A (simetrica):
-  - diagonala principala  (d0, n elemente)
-  - diagonala secundara de ordin p (d1, n-p elemente): d1[k] = A[k][k+p] = A[k+p][k]
-  - diagonala secundara de ordin q (d2, n-q elemente): d2[k] = A[k][k+q] = A[k+q][k]
+Student 1: 
+       Popovici Mihail
+       nr matricol: 310910401RSL231176
+       email: mpopovici763@gmail.com
+       discord: #mihail8071
 
-Relatii indici:
-  - Diagonala sup. ordin p: elemntele a_{0,p}, a_{1,p+1}, ..., a_{n-1-p, n-1}
-    => a_{i, i+p} = d1[i],  i = 0..n-1-p   (d1 are n-p elemente)
-  - Diagonala inf. ordin p: a_{p,0}, a_{p+1,1}, ..., a_{n-1, n-1-p}  (simetrie)
-    => a_{i+p, i} = d1[i],  i = 0..n-1-p
+Student 2:
+        Rusu George-Razvan
+        nr matricol: 310910401RSL231194
+        email: georgerusu984@gmail.com
+        discord: #dixienormus3027
 
-Fisierele disponibile (uploadate):
-  d0_i.txt  - diagonala principala (n elemente)
-  d1_i.txt  - diagonala secundara de ordin p (n-p elemente)
-  d2_i.txt  - diagonala secundara de ordin q (n-q elemente)  [nu exista in upload]
-  b_i.txt   - termenii liberi (n elemente)                   [nu exista in upload]
+Procentaj de AI folosit: 75%
 
-Nota: In aceasta implementare, pentru sistemul 1 avem d0_1 si d1_1 disponibile.
-      Codul este scris generic pentru orice combinatie de fisiere.
 =============================================================================
 """
 
@@ -37,12 +32,6 @@ EPSILON = 1e-8       # precizia calculelor (eps = 10^(-p), p=8)
 K_MAX   = 10000      # numarul maxim de iteratii Gauss-Seidel
 DIV_THR = 1e10       # prag de divergenta
 
-
-# =============================================================================
-# FUNCTIE: incarca_vector
-# Citeste un fisier text cu cate un numar real pe linie si returneaza un
-# array numpy. Returneaza None daca fisierul nu exista.
-# =============================================================================
 
 def incarca_vector(cale_fisier):
     """
@@ -62,12 +51,6 @@ def incarca_vector(cale_fisier):
     return np.array(valori, dtype=np.float64)
 
 
-# =============================================================================
-# FUNCTIE: determina_ordinul_diagonalei
-# Din lungimile d0 (n) si d1 (n-p) deducem p = n - len(d1).
-# Similar pentru q.
-# =============================================================================
-
 def determina_ordinul_diagonalei(n, lungime_d):
     """
     Determina ordinul p (sau q) al diagonalei secundare.
@@ -84,10 +67,6 @@ def determina_ordinul_diagonalei(n, lungime_d):
     return p
 
 
-# =============================================================================
-# FUNCTIE: verifica_diagonala_principala
-# Cerintele spun sa verificam ca |d0[i]| > eps pentru toti i.
-# =============================================================================
 
 def verifica_diagonala_principala(d0, eps):
     """

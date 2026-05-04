@@ -1,0 +1,24 @@
+TEMA 7 – Radacinile polinomului
+Polinom: P(x) = x³ - 6x² + 11x - 6  (radacini exacte: 1, 2, 3)
+Precizie: epsilon = 1e-08
+
+=======================================================
+RADACINI DISTINCTE GASITE (Newton)
+=======================================================
+  x* = 1.0000000000   (convergenta in 10 pasi)
+  x* = 2.0000000000   (convergenta in 4 pasi)
+  x* = 3.0000000000   (convergenta in 6 pasi)
+
+=======================================================
+RADACINI DISTINCTE GASITE (Olver)
+=======================================================
+  x* = 1.0000000000   (convergenta in 7 pasi)
+  x* = 2.0000000000   (convergenta in 4 pasi)
+  x* = 3.0000000000   (convergenta in 5 pasi)
+
+=======================================================
+COMPARATIE PASI Newton vs Olver
+=======================================================
+  Radacina 1.0000: Newton=10 pasi, Olver=7 pasi
+  Radacina 2.0000: Newton=4 pasi, Olver=4 pasi
+  Radacina 3.0000: Newton=6 pasi, Olver=5 pasi
